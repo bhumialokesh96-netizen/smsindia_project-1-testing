@@ -31,17 +31,16 @@ viewBinding true
 }
 
 dependencies {
-implementation 'androidx.appcompat:appcompat:1.7.0'
-implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.11.0'
 
-// 🔥 Firebase Core SDKs
-implementation 'com.google.firebase:firebase-auth:22.1.1'
-implementation 'com.google.firebase:firebase-firestore:24.7.1'
-implementation 'com.google.firebase:firebase-messaging:24.0.0' // ✅ Added FCM
+    // 🔥 Firebase Core SDKs
+    implementation platform('com.google.firebase:firebase-bom:33.4.0')
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-firestore'
+    implementation 'com.google.firebase:firebase-messaging'
 
-// ⚙️ WorkManager (for background jobs)
-implementation 'androidx.work:work-runtime:2.8.1'
-
-// (Optional but recommended)
-implementation platform('com.google.firebase:firebase-bom:33.4.0')
+    // ⚙️ WorkManager (for background jobs)
+    implementation 'androidx.work:work-runtime:2.8.1'
+    implementation 'com.google.guava:guava:32.1.3-android'  // ✅ FIXED missing ListenableFuture
 }
