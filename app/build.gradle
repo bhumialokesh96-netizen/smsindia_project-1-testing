@@ -3,12 +3,12 @@ apply plugin: 'com.google.gms.google-services'
 
 android {
     namespace 'com.smsindia.app'
-    compileSdk 35
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.smsindia.app"
         minSdk 24
-        targetSdk 35
+        targetSdk 34
         versionCode 15
         versionName "1.0.15"
     }
