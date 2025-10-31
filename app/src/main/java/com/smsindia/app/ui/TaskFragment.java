@@ -64,6 +64,7 @@ public class TaskFragment extends Fragment {
                              Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_task, container, false);
 
+        // UI bindings
         startBtn = v.findViewById(R.id.btn_start_task);
         viewLogsBtn = v.findViewById(R.id.btn_view_logs);
         tvRecipient = v.findViewById(R.id.tv_recipient);
@@ -80,27 +81,35 @@ public class TaskFragment extends Fragment {
             uid = auth.getCurrentUser().getUid();
         }
 
-        // ✅ Request SMS permissions (Android 13–15)
+        // ✅ Request runtime permissions (Android 13–15)
         checkAndRequestSmsPermissions();
 
+        // ▶ Start button
         startBtn.setOnClickListener(view -> {
             if (!hasSmsPermissions()) {
-                Toast.makeText(getContext(), "Grant SMS permissions first!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(),
+                        "Please allow SMS permissions to start sending.",
+                        Toast.LENGTH_LONG).show();
                 checkAndRequestSmsPermissions();
                 return;
             }
             if (isRunning) {
                 stopTask();
             } else {
-                startForegroundSmsWorker();  // 🚀 background-safe
+                startForegroundSmsWorker();
             }
         });
 
+        // 📋 View logs button
         viewLogsBtn.setOnClickListener(v1 ->
                 startActivity(new Intent(requireContext(), DeliveryLogActivity.class)));
 
+        // Load SMS tasks
         loadTasks();
+
+        // Register delivery listener
         registerDeliveryReceiver();
+
         return v;
     }
 
@@ -113,7 +122,7 @@ public class TaskFragment extends Fragment {
         handler.removeCallbacksAndMessages(null);
     }
 
-    // 🔔 delivery confirmation
+    // 🔔 Listen for delivery confirmations
     private void registerDeliveryReceiver() {
         deliveryReceiver = new BroadcastReceiver() {
             @Override
@@ -133,7 +142,7 @@ public class TaskFragment extends Fragment {
         requireContext().registerReceiver(deliveryReceiver, new IntentFilter(SMS_DELIVERED_ACTION));
     }
 
-    // 🟢 Android 15 runtime SMS permissions
+    // 🟢 Ask for SMS permission at runtime (required in Android 15)
     private void checkAndRequestSmsPermissions() {
         if (!hasSmsPermissions()) {
             ActivityCompat.requestPermissions(
@@ -166,12 +175,15 @@ public class TaskFragment extends Fragment {
             boolean granted = true;
             for (int res : grantResults)
                 if (res != PackageManager.PERMISSION_GRANTED) granted = false;
-            Toast.makeText(getContext(),
-                    granted ? "✅ SMS permissions granted" : "❌ SMS permissions denied",
-                    Toast.LENGTH_SHORT).show();
+            if (granted) {
+                Toast.makeText(getContext(), "✅ SMS permissions granted", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "❌ SMS permissions denied. App cannot send messages.", Toast.LENGTH_LONG).show();
+            }
         }
     }
 
+    // 🔄 Load Firestore tasks
     private void loadTasks() {
         tvStatus.setText("Loading tasks...");
         db.collection("sms_tasks").get()
@@ -190,10 +202,10 @@ public class TaskFragment extends Fragment {
                         tvStatus.setText("Error loading tasks: " + e.getMessage()));
     }
 
-    // 🚀 Foreground Worker start (Android 15 compliant)
+    // 🚀 Start foreground SMS Worker (Android 15 compliant)
     private void startForegroundSmsWorker() {
         if (auth.getCurrentUser() == null) {
-            Toast.makeText(getContext(), "User not logged in", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Please log in first.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -208,9 +220,12 @@ public class TaskFragment extends Fragment {
         WorkManager.getInstance(requireContext()).enqueue(work);
         Toast.makeText(getContext(), "🚀 SMS worker started in background", Toast.LENGTH_SHORT).show();
 
-        tvStatus.setText("📤 Sending via foreground worker...");
+        tvStatus.setText("📤 Sending messages via background worker...");
+        isRunning = true;
+        startBtn.setText("⏸ Stop Task");
     }
 
+    // ⏸ Stop sending
     private void stopTask() {
         isRunning = false;
         startBtn.setText("▶ Start SMS Task");
@@ -219,6 +234,7 @@ public class TaskFragment extends Fragment {
         WorkManager.getInstance(requireContext()).cancelAllWorkByTag("sms_worker");
     }
 
+    // 📜 Log sent task
     private void markTaskSent(String phone) {
         db.collection("sent_logs").add(new HashMap<String, Object>() {{
             put("userId", uid);
@@ -227,6 +243,7 @@ public class TaskFragment extends Fragment {
         }});
     }
 
+    // 💰 Update user balance after confirmed delivery
     private void updateBalance(String userId) {
         if (userId == null) return;
         db.collection("users").document(userId)
