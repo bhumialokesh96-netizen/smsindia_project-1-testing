@@ -1,0 +1,35 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services'
+
+android {
+    namespace 'com.smsindia.app'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.smsindia.app"
+        minSdk 24
+        targetSdk 35
+        versionCode 15
+        versionName "1.0.15"
+    }
+
+    buildTypes {
+        debug {}
+        release { minifyEnabled false }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildFeatures { viewBinding true }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'com.google.firebase:firebase-auth:22.1.1'
+    implementation 'com.google.firebase:firebase-firestore:24.7.1'
+    implementation 'androidx.work:work-runtime:2.8.1'
+}
